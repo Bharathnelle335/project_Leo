@@ -1,0 +1,49 @@
+name: OSS Compliance & SBOM Demo (Syft + SCANOSS)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  oss-compliance:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
+    - name: Install required tools
+      run: |
+        pip install scanoss-cli
+        curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+
+    - name: Run SCANOSS Scan
+      run: |
+        scanoss-py scan -o scanoss-results.json .
+
+    - name: Generate SBOM with Syft
+      run: |
+        syft dir:. -o spdx-json > syft-sbom.spdx.json
+
+    - name: Install Python libs for report generation
+      run: |
+        pip install pandas openpyxl
+
+    - name: Generate Excel Compliance Report
+      run: |
+        python generate_excel_report.py scanoss-results.json syft-sbom.spdx.json
+
+    - name: Upload Reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: compliance-and-sbom-output
+        path: |
+          compliance-report.xlsx
+          syft-sbom.spdx.json
