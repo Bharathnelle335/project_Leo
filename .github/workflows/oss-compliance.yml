@@ -21,7 +21,7 @@ jobs:
 
     - name: Install required tools
       run: |
-        pip install scanoss-cli
+        pip install scanoss
         curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
 
     - name: Run SCANOSS Scan
