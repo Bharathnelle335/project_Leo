@@ -19,6 +19,9 @@ jobs:
         distribution: 'temurin'
         java-version: '21'
 
+    - name: Grant execute permission to Maven wrapper
+      run: chmod +x demo/mvnw
+
     - name: Build project and extract dependencies
       run: |
         cd demo
