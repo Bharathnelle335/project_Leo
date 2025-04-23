@@ -1,4 +1,4 @@
-name: OSS Compliance & SBOM Demo (Syft + SCANOSS)
+name: OSS Compliance & SBOM Demo (Syft + SCANOSS)_1
 
 on:
   push:
@@ -29,8 +29,10 @@ jobs:
         scanoss-py scan -o scanoss-results.json .
 
     - name: Generate SBOM with Syft
-      run: |
-        syft dir:. -o spdx-json > syft-sbom.spdx.json
+      run: syft dir:. --scope all-layers -o json > syft-sbom.json
+
+    - name: Generate Excel Compliance Report
+      run: python3 generate_excel_from_syft_json.py
 
     - name: Install Python libs for report generation
       run: |
@@ -38,7 +40,7 @@ jobs:
 
     - name: Generate Excel Compliance Report
       run: |
-        python generate_excel_report.py scanoss-results.json syft-sbom.spdx.json
+        python generate_excel_from_syft_json.py
 
     - name: Upload Reports
       uses: actions/upload-artifact@v4

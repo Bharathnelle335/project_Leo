@@ -1,49 +1,42 @@
-import pandas as pd
 import json
-import sys
+import pandas as pd
 
-def load_scanoss(scanoss_path):
-    try:
-        with open(scanoss_path) as f:
-            return json.load(f)
-    except:
-        return []
-
-def load_syft(syft_path):
-    with open(syft_path) as f:
-        return json.load(f)
-
-def severity_from_license(license_name):
-    if 'GPL' in license_name and 'LGPL' not in license_name:
-        return 'high'
-    elif 'LGPL' in license_name:
-        return 'medium'
-    elif license_name == 'unknown' or license_name.strip() == '':
-        return 'unknown'
+def get_severity(license_name):
+    if not license_name:
+        return "no"
+    license_name = license_name.lower()
+    if "gpl" in license_name and "lgpl" not in license_name:
+        return "high"
+    elif "lgpl" in license_name:
+        return "medium"
+    elif "apache" in license_name or "mit" in license_name or "bsd" in license_name:
+        return "no"
     else:
-        return 'no'
+        return "no"
 
-def generate_report(scanoss_json, syft_json, output_excel):
-    syft = load_syft(syft_json)
+def extract_from_syft_json(syft_json_path="syft-sbom.json", output_excel_path="compliance-report.xlsx"):
+    with open(syft_json_path, 'r', encoding='utf-8') as file:
+        data = json.load(file)
 
-    records = []
-    for pkg in syft.get("packages", []):
-        name = pkg.get("name", "unknown")
-        version = pkg.get("versionInfo", "unknown")
-        license = pkg.get("licenseConcluded", "unknown")
-        homepage = pkg.get("homepage", "unknown")
+    components = []
+    for artifact in data.get("artifacts", []):
+        name = artifact.get("name", "unknown")
+        version = artifact.get("version", "unknown")
+        license_info = artifact.get("licenses", [])
+        license_concluded = license_info[0]["value"] if license_info else "NOASSERTION"
+        purl = artifact.get("purl", "unknown")
+        severity = get_severity(license_concluded)
 
-        records.append({
+        components.append({
             "Component": name,
             "Version": version,
-            "License": license,
-            "License URL": homepage,
-            "Severity": severity_from_license(license)
+            "License": license_concluded,
+            "License URL": purl,
+            "Severity": severity
         })
 
-    df = pd.DataFrame(records)
-    df.to_excel(output_excel, index=False)
+    df = pd.DataFrame(components)
+    df.to_excel(output_excel_path, index=False)
 
 if __name__ == "__main__":
-    # For GitHub Actions: fixed filenames
-    generate_report("scanoss-results.json", "syft-sbom.spdx.json", "compliance-report.xlsx")
+    extract_from_syft_json()
