@@ -19,6 +19,11 @@ jobs:
         distribution: 'temurin'
         java-version: '21'
 
+    - name: Build project and extract dependencies
+      run: |
+        cd demo
+        ./mvnw dependency:copy-dependencies -DincludeScope=runtime
+
     - name: Install required tools
       run: |
         pip install scanoss
