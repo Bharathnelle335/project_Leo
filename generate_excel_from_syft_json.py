@@ -1,42 +1,45 @@
 import json
 import pandas as pd
+import sys
 
-def get_severity(license_name):
-    if not license_name:
-        return "no"
-    license_name = license_name.lower()
-    if "gpl" in license_name and "lgpl" not in license_name:
-        return "high"
-    elif "lgpl" in license_name:
-        return "medium"
-    elif "apache" in license_name or "mit" in license_name or "bsd" in license_name:
-        return "no"
+# Read SPDX JSON file from Syft
+with open('syft-sbom.spdx.json', 'r', encoding='utf-8') as f:
+    data = json.load(f)
+
+packages = data.get("packages", [])
+
+rows = []
+for pkg in packages:
+    name = pkg.get("name", "unknown")
+    version = pkg.get("versionInfo", "unknown")
+    license = pkg.get("licenseConcluded", "NOASSERTION")
+    license_url = None
+
+    # Try to find license URL
+    for extRef in pkg.get("externalRefs", []):
+        if extRef.get("referenceType") == "purl" and "github.com" in extRef.get("referenceLocator", ""):
+            license_url = extRef.get("referenceLocator")
+            break
+
+    # Classify severity
+    if "GPL" in license and "LGPL" not in license:
+        severity = "high"
+    elif "LGPL" in license or "MPL" in license:
+        severity = "medium"
+    elif license == "NOASSERTION":
+        severity = "no"
     else:
-        return "no"
+        severity = "no"
 
-def extract_from_syft_json(syft_json_path="syft-sbom.json", output_excel_path="compliance-report.xlsx"):
-    with open(syft_json_path, 'r', encoding='utf-8') as file:
-        data = json.load(file)
+    rows.append({
+        "Component": name,
+        "Version": version,
+        "License": license,
+        "License URL": license_url or "unknown",
+        "Severity": severity
+    })
 
-    components = []
-    for artifact in data.get("artifacts", []):
-        name = artifact.get("name", "unknown")
-        version = artifact.get("version", "unknown")
-        license_info = artifact.get("licenses", [])
-        license_concluded = license_info[0]["value"] if license_info else "NOASSERTION"
-        purl = artifact.get("purl", "unknown")
-        severity = get_severity(license_concluded)
-
-        components.append({
-            "Component": name,
-            "Version": version,
-            "License": license_concluded,
-            "License URL": purl,
-            "Severity": severity
-        })
-
-    df = pd.DataFrame(components)
-    df.to_excel(output_excel_path, index=False)
-
-if __name__ == "__main__":
-    extract_from_syft_json()
+# Write to Excel
+df = pd.DataFrame(rows)
+df.to_excel("compliance-report.xlsx", index=False)
+print("✅ compliance-report.xlsx generated.")
