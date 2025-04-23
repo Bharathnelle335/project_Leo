@@ -1,0 +1,55 @@
+name: OSS Compliance & SBOM v2 (Syft Enhanced + SCANOSS CLI)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  oss-compliance-v2:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Grant execute permission for Gradle wrapper
+        run: chmod +x ./demo/gradlew
+
+      - name: Build project and copy dependencies
+        run: |
+          cd demo
+          ./gradlew dependency:copyDependencies -DincludeScope=runtime
+
+      - name: Install required tools
+        run: |
+          pip install scanoss pandas openpyxl
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Run SCANOSS CLI Scan
+        run: |
+          curl -LO https://github.com/scanoss/scanoss-cli/releases/latest/download/scanoss-linux
+          chmod +x scanoss-linux
+          sudo mv scanoss-linux /usr/local/bin/scanoss
+          scanoss scan -o scanoss-results.spdx.json .
+
+      - name: Generate SBOM with Syft (with license detection)
+        run: |
+          syft dir:. --output spdx-json=syft-sbom.spdx.json --detect-license=true
+
+      - name: Generate Excel Compliance Report
+        run: |
+          python3 generate_excel_from_syft_json_v2.py syft-sbom.spdx.json
+
+      - name: Upload Compliance Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-v2-output
+          path: |
+            compliance-report.xlsx
+            syft-sbom.spdx.json
+            scanoss-results.spdx.json
