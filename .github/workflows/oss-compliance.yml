@@ -31,12 +31,14 @@ jobs:
     - name: Generate SBOM with Syft
       run: syft dir:. --scope all-layers -o json > syft-sbom.json
 
-    - name: Generate Excel Compliance Report
-      run: python3 generate_excel_from_syft_json.py
-
     - name: Install Python libs for report generation
       run: |
         pip install pandas openpyxl
+
+    - name: Generate Excel Compliance Report
+      run: |
+        python3 generate_excel_from_syft_json.py
+
 
     - name: Generate Excel Compliance Report
       run: |
