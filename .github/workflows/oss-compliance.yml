@@ -29,7 +29,8 @@ jobs:
         scanoss-py scan -o scanoss-results.json .
 
     - name: Generate SBOM with Syft
-      run: syft dir:. --scope all-layers -o json > syft-sbom.json
+      run: |
+        syft dir:. -o spdx-json > $GITHUB_WORKSPACE/syft-sbom.spdx.json
 
     - name: Install Python libs for report generation
       run: |
@@ -37,7 +38,7 @@ jobs:
 
     - name: Generate Excel Compliance Report
       run: |
-        python3 generate_excel_from_syft_json.py syft-sbom.spdx.json
+        python3 generate_excel_from_syft_json.py $GITHUB_WORKSPACE/syft-sbom.spdx.json
 
     - name: Generate Excel Compliance Report
       run: |

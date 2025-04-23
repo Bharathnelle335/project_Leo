@@ -2,11 +2,11 @@ import json
 import pandas as pd
 import sys
 
-# Get filename from CLI argument
-input_file = sys.argv[1] if len(sys.argv) > 1 else 'syft-sbom.spdx.json'
+file_path = sys.argv[1] if len(sys.argv) > 1 else "syft-sbom.spdx.json"
 
-with open('syft-sbom.spdx.json', 'r', encoding='utf-8') as f:
+with open(file_path, "r", encoding="utf-8") as f:
     data = json.load(f)
+
 
 packages = data.get("packages", [])
 
