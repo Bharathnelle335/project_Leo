@@ -37,8 +37,7 @@ jobs:
 
     - name: Generate Excel Compliance Report
       run: |
-        python3 generate_excel_from_syft_json.py
-
+        python3 generate_excel_from_syft_json.py syft-sbom.spdx.json
 
     - name: Generate Excel Compliance Report
       run: |
