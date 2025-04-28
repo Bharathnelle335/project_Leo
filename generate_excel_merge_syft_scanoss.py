@@ -63,6 +63,17 @@ else:
     merged_df = syft_df.copy()
     merged_df['SCANOSS License'] = None
 
+# Final License selection
+final_license = []
+for _, row in merged_df.iterrows():
+    syft_license = (row['Syft License'] or '').strip()
+    scanoss_license = (row['SCANOSS License'] or '').strip()
+    if not syft_license or syft_license.upper() in ('NOASSERTION', 'UNKNOWN'):
+        final_license.append(scanoss_license if scanoss_license else syft_license)
+    else:
+        final_license.append(syft_license)
+
+merged_df['Final License'] = final_license
 
 # Arrange final columns
 final_df = merged_df[['Component Name', 'Version', 'Final License']]
