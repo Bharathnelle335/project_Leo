@@ -10,52 +10,48 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set up Java
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '21'
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
 
-    - name: Grant execute permission to Maven wrapper
-      run: chmod +x demo/mvnw
+      - name: Grant execute permission to Maven wrapper
+        run: chmod +x demo/mvnw
 
-    - name: Build project and extract dependencies
-      run: |
-        cd demo
-        ./mvnw dependency:copy-dependencies -DincludeScope=runtime
+      - name: Build project and extract dependencies
+        run: |
+          cd demo
+          ./mvnw dependency:copy-dependencies -DincludeScope=runtime
 
-    - name: Install required tools
-      run: |
-        pip install scanoss
-        curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+      - name: Install required tools
+        run: |
+          pip install scanoss
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
 
-    - name: Run SCANOSS Scan
-      run: |
-        scanoss-py scan -o scanoss-results.json .
+      - name: Run SCANOSS Scan
+        run: |
+          scanoss-py scan -o scanoss-results.json .
 
-    - name: Generate SBOM with Syft
-      run: |
-        syft dir:. -o spdx-json > $GITHUB_WORKSPACE/syft-sbom.spdx.json
+      - name: Generate SBOM with Syft
+        run: |
+          syft dir:. -o spdx-json > $GITHUB_WORKSPACE/syft-sbom.spdx.json
 
-    - name: Install Python libs for report generation
-      run: |
-        pip install pandas openpyxl
+      - name: Install Python libs for report generation
+        run: |
+          pip install pandas openpyxl
 
-    - name: Generate Merged Compliance Report (v3.0.6)
-      run: |
-        python3 generate_excel_merge_syft_scanoss.py $GITHUB_WORKSPACE/syft-sbom.spdx.json $GITHUB_WORKSPACE/scanoss-results.json
+      - name: Generate Merged Compliance Report (v3.0.6)
+        run: |
+          python3 generate_excel_merge_syft_scanoss.py $GITHUB_WORKSPACE/syft-sbom.spdx.json $GITHUB_WORKSPACE/scanoss-results.json
 
-    - name: Generate Excel Compliance Report
-      run: |
-        python generate_excel_from_syft_json.py
-
-    - name: Upload Reports
-      uses: actions/upload-artifact@v4
-      with:
-        name: compliance-and-sbom-output
-        path: |
-          compliance-report.xlsx
-          syft-sbom.spdx.json
+      - name: Upload Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-and-sbom-output
+          path: |
+            compliance-report.xlsx
+            syft-sbom.spdx.json
