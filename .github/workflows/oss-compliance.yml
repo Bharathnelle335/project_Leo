@@ -32,19 +32,19 @@ jobs:
           pip install scanoss
           curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
 
-      - name: Run SCANOSS Scan
+      - name: Run SCANOSS Scan (correct folder)
         run: |
-          scanoss-py scan -o scanoss-results.json .
+          scanoss-py scan -o scanoss-results.json demo/
 
       - name: Generate SBOM with Syft
         run: |
-          syft dir:. -o spdx-json > $GITHUB_WORKSPACE/syft-sbom.spdx.json
+          syft dir:demo/ -o spdx-json > $GITHUB_WORKSPACE/syft-sbom.spdx.json
 
       - name: Install Python libs for report generation
         run: |
           pip install pandas openpyxl
 
-      - name: Generate Merged Compliance Report (v3.0.6)
+      - name: Generate Merged Compliance Report (v3.0.9)
         run: |
           python3 generate_excel_merge_syft_scanoss.py $GITHUB_WORKSPACE/syft-sbom.spdx.json $GITHUB_WORKSPACE/scanoss-results.json
 
@@ -55,3 +55,4 @@ jobs:
           path: |
             compliance-report.xlsx
             syft-sbom.spdx.json
+            scanoss-results.json

@@ -27,7 +27,7 @@ for pkg in syft_data.get('packages', []):
     })
 syft_df = pd.DataFrame(syft_rows)
 
-# Prepare SCANOSS License Mapping (not full DF merge)
+# Prepare SCANOSS License Mapping (component -> license)
 scanoss_license_map = {}
 
 for match in scanoss_data.get('matches', []):
