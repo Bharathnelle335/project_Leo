@@ -67,24 +67,20 @@ if not scanoss_df.empty:
 else:
     pd.DataFrame(columns=['Component Name', 'Version', 'Vendor', 'Repo URL', 'License Names', 'License URLs']).to_excel('scanoss-compliance-report.xlsx', index=False)
 
-# Now merge Syft and SCANOSS properly
-# Syft: Component Name, Version, Syft License
-# SCANOSS: Component Name, License Names
-
-# Prepare SCANOSS license mapping DataFrame
+# Merge Syft and SCANOSS properly
 scanoss_license_df = scanoss_df[['Component Name', 'License Names']].rename(columns={'License Names': 'SCANOSS License'})
 
-# Merge both (outer join to capture everything)
+# Outer join to capture everything
 merged_df = pd.merge(syft_only_df, scanoss_license_df, on='Component Name', how='outer')
 
 # Fill missing versions
 merged_df['Version'] = merged_df['Version'].fillna('')
 
-# Decide Final License
+# Decide Final License (with string safe conversion)
 final_license = []
 for _, row in merged_df.iterrows():
-    syft_license = (row.get('Syft License') or '').strip()
-    scanoss_license = (row.get('SCANOSS License') or '').strip()
+    syft_license = str(row.get('Syft License') or '').strip()
+    scanoss_license = str(row.get('SCANOSS License') or '').strip()
     if syft_license and syft_license.upper() not in ('NOASSERTION', 'UNKNOWN'):
         final_license.append(syft_license)
     elif scanoss_license:
