@@ -27,21 +27,31 @@ for pkg in syft_data.get('packages', []):
     })
 syft_df = pd.DataFrame(syft_rows)
 
-# Prepare SCANOSS License Mapping and DataFrame
+# Prepare SCANOSS DataFrame (with rich fields)
 scanoss_rows = []
 scanoss_license_map = {}
 
 for match in scanoss_data.get('matches', []):
-    component = match.get('component')
-    if not component:
-        component = match.get('file', '').split('/')[-1]
-    license_detected = match.get('licenses', [{}])[0].get('name') if match.get('licenses') else None
-    if component and license_detected:
+    component = match.get('component') or match.get('file', '').split('/')[-1]
+    version = match.get('version')
+    vendor = match.get('vendor')
+    repo_url = match.get('url')
+    licenses = match.get('licenses', [])
+
+    license_names = ", ".join([lic.get('name', '') for lic in licenses if 'name' in lic])
+    license_urls = ", ".join([lic.get('url', '') for lic in licenses if 'url' in lic])
+
+    if component:
         scanoss_rows.append({
             'Component Name': component,
-            'SCANOSS License': license_detected
+            'Version': version,
+            'Vendor': vendor,
+            'Repo URL': repo_url,
+            'License Names': license_names,
+            'License URLs': license_urls
         })
-        scanoss_license_map[component] = license_detected
+        if license_names:
+            scanoss_license_map[component] = license_names
 
 scanoss_df = pd.DataFrame(scanoss_rows)
 
@@ -54,7 +64,7 @@ if not scanoss_df.empty:
     scanoss_df.to_excel('scanoss-compliance-report.xlsx', index=False)
 else:
     # create empty if scanoss not found
-    pd.DataFrame(columns=['Component Name', 'SCANOSS License']).to_excel('scanoss-compliance-report.xlsx', index=False)
+    pd.DataFrame(columns=['Component Name', 'Version', 'Vendor', 'Repo URL', 'License Names', 'License URLs']).to_excel('scanoss-compliance-report.xlsx', index=False)
 
 # Prepare Final Merged Compliance Report
 final_license = []
