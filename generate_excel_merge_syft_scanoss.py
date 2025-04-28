@@ -32,6 +32,8 @@ syft_df = pd.DataFrame(syft_rows)
 scanoss_rows = []
 for match in scanoss_data.get('matches', []):
     component = match.get('component')
+    if not component:
+        component = match.get('file', '').split('/')[-1]  # fallback to filename if component is missing
     license_detected = match.get('licenses', [{}])[0].get('name') if match.get('licenses') else None
     if component and license_detected:
         scanoss_rows.append({
