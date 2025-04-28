@@ -56,8 +56,8 @@ for _, row in merged_df.iterrows():
     else:
         final_license.append(syft_license)
 
-# Merge Syft and SCANOSS DataFrames
-if not scanoss_df.empty and 'Component Name' in scanoss_df.columns:
+# Merge carefully
+if not scanoss_df.empty and 'Component Name' in scanoss_df.columns and len(scanoss_df.columns) > 0:
     merged_df = pd.merge(syft_df, scanoss_df, how='left', on='Component Name')
 else:
     merged_df = syft_df.copy()
