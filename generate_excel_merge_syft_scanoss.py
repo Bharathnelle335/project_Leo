@@ -27,7 +27,8 @@ for pkg in syft_data.get('packages', []):
     })
 syft_df = pd.DataFrame(syft_rows)
 
-# Prepare SCANOSS License Mapping (component -> license)
+# Prepare SCANOSS License Mapping and DataFrame
+scanoss_rows = []
 scanoss_license_map = {}
 
 for match in scanoss_data.get('matches', []):
@@ -36,9 +37,26 @@ for match in scanoss_data.get('matches', []):
         component = match.get('file', '').split('/')[-1]
     license_detected = match.get('licenses', [{}])[0].get('name') if match.get('licenses') else None
     if component and license_detected:
+        scanoss_rows.append({
+            'Component Name': component,
+            'SCANOSS License': license_detected
+        })
         scanoss_license_map[component] = license_detected
 
-# Prepare Final License List
+scanoss_df = pd.DataFrame(scanoss_rows)
+
+# Save Syft-only Compliance Report
+syft_only_df = syft_df[['Component Name', 'Version', 'Syft License']]
+syft_only_df.to_excel('syft-compliance-report.xlsx', index=False)
+
+# Save SCANOSS-only Compliance Report
+if not scanoss_df.empty:
+    scanoss_df.to_excel('scanoss-compliance-report.xlsx', index=False)
+else:
+    # create empty if scanoss not found
+    pd.DataFrame(columns=['Component Name', 'SCANOSS License']).to_excel('scanoss-compliance-report.xlsx', index=False)
+
+# Prepare Final Merged Compliance Report
 final_license = []
 
 for _, row in syft_df.iterrows():
@@ -53,10 +71,8 @@ for _, row in syft_df.iterrows():
 
 syft_df['Final License'] = final_license
 
-# Arrange final columns
+# Arrange final merged columns
 final_df = syft_df[['Component Name', 'Version', 'Final License']]
-
-# Save to Excel
 final_df.to_excel('compliance-report.xlsx', index=False)
 
-print("✅ Compliance Excel generated successfully using clean Syft + SCANOSS license mapping!")
+print("✅ All compliance Excel reports generated successfully: syft-compliance-report.xlsx, scanoss-compliance-report.xlsx, compliance-report.xlsx")
