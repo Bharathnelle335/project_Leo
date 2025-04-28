@@ -27,31 +27,34 @@ for pkg in syft_data.get('packages', []):
     })
 syft_df = pd.DataFrame(syft_rows)
 
-# Prepare SCANOSS DataFrame (with rich fields)
+# Prepare SCANOSS DataFrame (correct looping)
 scanoss_rows = []
 scanoss_license_map = {}
 
-for match in scanoss_data.get('matches', []):
-    component = match.get('component') or match.get('file', '').split('/')[-1]
-    version = match.get('version')
-    vendor = match.get('vendor')
-    repo_url = match.get('url')
-    licenses = match.get('licenses', [])
+# IMPORTANT: loop over 'files', then 'matches'
+for file_entry in scanoss_data.get('files', []):
+    file_path = file_entry.get('file', '')
+    for match in file_entry.get('matches', []):
+        component = match.get('component') or file_path.split('/')[-1]
+        version = match.get('version')
+        vendor = match.get('vendor')
+        repo_url = match.get('url')
+        licenses = match.get('licenses', [])
 
-    license_names = ", ".join([lic.get('name', '') for lic in licenses if 'name' in lic])
-    license_urls = ", ".join([lic.get('url', '') for lic in licenses if 'url' in lic])
+        license_names = ", ".join([lic.get('name', '') for lic in licenses if 'name' in lic])
+        license_urls = ", ".join([lic.get('url', '') for lic in licenses if 'url' in lic])
 
-    if component:
-        scanoss_rows.append({
-            'Component Name': component,
-            'Version': version,
-            'Vendor': vendor,
-            'Repo URL': repo_url,
-            'License Names': license_names,
-            'License URLs': license_urls
-        })
-        if license_names:
-            scanoss_license_map[component] = license_names
+        if component:
+            scanoss_rows.append({
+                'Component Name': component,
+                'Version': version,
+                'Vendor': vendor,
+                'Repo URL': repo_url,
+                'License Names': license_names,
+                'License URLs': license_urls
+            })
+            if license_names:
+                scanoss_license_map[component] = license_names
 
 scanoss_df = pd.DataFrame(scanoss_rows)
 
