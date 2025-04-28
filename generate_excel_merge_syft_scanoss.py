@@ -27,31 +27,33 @@ for pkg in syft_data.get('packages', []):
     })
 syft_df = pd.DataFrame(syft_rows)
 
-# Prepare SCANOSS DataFrame (directly from matches)
+# Prepare SCANOSS DataFrame
 scanoss_rows = []
 scanoss_license_map = {}
 
-for match in scanoss_data.get('matches', []):
-    component = match.get('component') or ""
-    version = match.get('version') or ""
-    vendor = match.get('vendor') or ""
-    repo_url = match.get('url') or ""
-    licenses = match.get('licenses', [])
+# Important change: Iterate through each file and its match list
+for file_matches in scanoss_data.values():
+    for match in file_matches:
+        component = match.get('component') or ""
+        version = match.get('version') or ""
+        vendor = match.get('vendor') or ""
+        repo_url = match.get('url') or ""
+        licenses = match.get('licenses', [])
 
-    license_names = ", ".join([lic.get('name', '') for lic in licenses if 'name' in lic])
-    license_urls = ", ".join([lic.get('url', '') for lic in licenses if 'url' in lic])
+        license_names = ", ".join([lic.get('name', '') for lic in licenses if 'name' in lic])
+        license_urls = ", ".join([lic.get('url', '') for lic in licenses if 'url' in lic])
 
-    if component:
-        scanoss_rows.append({
-            'Component Name': component,
-            'Version': version,
-            'Vendor': vendor,
-            'Repo URL': repo_url,
-            'License Names': license_names,
-            'License URLs': license_urls
-        })
-        if license_names:
-            scanoss_license_map[component] = license_names
+        if component:
+            scanoss_rows.append({
+                'Component Name': component,
+                'Version': version,
+                'Vendor': vendor,
+                'Repo URL': repo_url,
+                'License Names': license_names,
+                'License URLs': license_urls
+            })
+            if license_names:
+                scanoss_license_map[component] = license_names
 
 scanoss_df = pd.DataFrame(scanoss_rows)
 
