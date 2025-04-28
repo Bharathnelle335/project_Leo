@@ -44,7 +44,7 @@ jobs:
         run: |
           pip install pandas openpyxl
 
-      - name: Generate Merged Compliance Report (v3.0.9)
+      - name: Generate Compliance Excel Reports (v4.0.0)
         run: |
           python3 generate_excel_merge_syft_scanoss.py $GITHUB_WORKSPACE/syft-sbom.spdx.json $GITHUB_WORKSPACE/scanoss-results.json
 
@@ -54,5 +54,7 @@ jobs:
           name: compliance-and-sbom-output
           path: |
             compliance-report.xlsx
+            syft-compliance-report.xlsx
+            scanoss-compliance-report.xlsx
             syft-sbom.spdx.json
             scanoss-results.json
