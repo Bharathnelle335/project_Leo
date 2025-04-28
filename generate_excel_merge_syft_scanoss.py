@@ -56,7 +56,12 @@ for _, row in merged_df.iterrows():
     else:
         final_license.append(syft_license)
 
-merged_df['Final License'] = final_license
+if not scanoss_df.empty:
+    merged_df = pd.merge(syft_df, scanoss_df, how='left', on='Component Name')
+else:
+    # If SCANOSS data is missing, use only Syft data
+    merged_df = syft_df.copy()
+    merged_df['SCANOSS License'] = None
 
 # Arrange final columns
 final_df = merged_df[['Component Name', 'Version', 'Final License']]
