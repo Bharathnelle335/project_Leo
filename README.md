@@ -17,3 +17,7 @@ This project scans a source code repository using SCANOSS and Syft, and generate
 ## How to Use
 Run the GitHub Actions workflow with a target Git repository.
 Reports will be uploaded as artifacts.
+
+## License
+This project is licensed under the Apache License 2.0.  
+See the [LICENSE](./LICENSE) file for details.
