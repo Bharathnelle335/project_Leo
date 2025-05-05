@@ -3,6 +3,7 @@
 This project scans a source code repository using SCANOSS and Syft, and generates:
 - SPDX JSON report
 - Combined Excel license report
+![source-code-scan-scanoss-syft Flow Image](https://github.com/user-attachments/assets/7bfdd5e6-a1b0-42b4-b1e0-da14652146f7)
 
 ## Tools Used
 - SCANOSS CLI
